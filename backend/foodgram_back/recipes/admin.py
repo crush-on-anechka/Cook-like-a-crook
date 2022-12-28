@@ -4,10 +4,14 @@ from .models import Amount, Favorite, Ingredient, Recipe, ShoppingCart, Tag
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'cooking_time', 'author', 'pub_date')
+    list_display = ('pk', 'name', 'cooking_time', 'author', 'pub_date',
+                    'favorites_count')
     list_editable = ('name', 'cooking_time', 'author')
-    list_filter = ('name', 'author')
+    list_filter = ('name', 'author', 'tags')
     empty_value_display = '-пусто-'
+
+    def favorites_count(self, obj):
+        return obj.favorite.count()
 
 
 class TagAdmin(admin.ModelAdmin):

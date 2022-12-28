@@ -45,15 +45,6 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=False,
             methods=['GET'],
             permission_classes=(permissions.IsAuthenticated,),
-            name='My information'
-            )
-    def me(self, request):
-        serializer = self.get_serializer(request.user)
-        return Response(serializer.data)
-
-    @action(detail=False,
-            methods=['GET'],
-            permission_classes=(permissions.IsAuthenticated,),
             )
     def subscriptions(self, request):
         subscribers_ids = self.request.user.subscriber.values_list(
