@@ -6,6 +6,7 @@ from .models import Amount, Favorite, Ingredient, Recipe, ShoppingCart, Tag
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'cooking_time', 'author', 'pub_date')
     list_editable = ('name', 'cooking_time', 'author')
+    list_filter = ('name', 'author')
     empty_value_display = '-пусто-'
 
 
