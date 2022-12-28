@@ -1,13 +1,12 @@
 import base64
 
+import djoser
 from django.contrib.auth import get_user_model
 from recipes.models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
                             Tag)
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from users.models import Subscribe
-
-import djoser
 
 User = get_user_model()
 
@@ -22,7 +21,7 @@ class Base64ToImage(serializers.Field):
         return base64.decodebytes(data)
 
 
-class UserSerializer(djoser.serializers.UserSerializer):
+class UserSerializer(serializers.ModelSerializer):
     '''Basic user model serializer.'''
 
     is_subscribed = serializers.BooleanField(default=False)
@@ -34,7 +33,7 @@ class UserSerializer(djoser.serializers.UserSerializer):
         unique = ('username', 'email')
 
 
-class UserCreateSerializer(djoser.serializers.UserCreateSerializer):
+class UserCreateSerializer(serializers.ModelSerializer):
     '''User model serializer for POST method.'''
 
     class Meta(UserSerializer.Meta):

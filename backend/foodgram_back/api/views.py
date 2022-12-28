@@ -47,24 +47,21 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             )
     def subscriptions(self, request):
-        subscribers_ids = self.request.user.subscriber.values_list(
-            'subscription',
-            flat=True
-        )
-        subscribers = User.objects.filter(
-            pk__in=subscribers_ids).annotate(recipes_count=Count('recipes'))
+        subscriptions = User.objects.filter(
+            subscription__user=request.user).annotate(
+                recipes_count=Count('recipes'))
 
         recipes_limit = request.query_params.get('recipes_limit')
         ctx = {'recipes_limit': int(recipes_limit)} if recipes_limit else {}
 
-        page = self.paginate_queryset(subscribers)
+        page = self.paginate_queryset(subscriptions)
         if page is not None:
             serializer = SubscriptionsListSerializer(
                 page, many=True, context=ctx)
             return self.get_paginated_response(serializer.data)
 
         serializer = SubscriptionsListSerializer(
-            subscribers, many=True, context=ctx)
+            subscriptions, many=True, context=ctx)
         return Response(serializer.data)
 
     @action(detail=True,
