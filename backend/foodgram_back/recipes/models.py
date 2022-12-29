@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from .validators import validate_color, validate_name
+
 User = get_user_model()
 
 
@@ -29,9 +31,19 @@ class Ingredient(models.Model):
 class Tag(models.Model):
     '''Tag model class.'''
 
-    name = models.CharField('Название', max_length=200, unique=True)
+    name = models.CharField(
+        'Название',
+        max_length=200,
+        unique=True,
+        validators=[validate_name]
+    )
     slug = models.SlugField('Уникальный слаг', max_length=200, unique=True)
-    color = models.CharField('Цвет в HEX', max_length=7, unique=True)
+    color = models.CharField(
+        'Цвет в HEX',
+        max_length=7,
+        unique=True,
+        validators=[validate_color]
+    )
 
     class Meta:
         default_related_name = 'tags'
