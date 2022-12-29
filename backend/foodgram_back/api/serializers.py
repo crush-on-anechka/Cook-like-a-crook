@@ -21,7 +21,7 @@ class Base64ToImage(serializers.Field):
         return base64.decodebytes(data)
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(djoser.serializers.UserSerializer):
     '''Basic user model serializer.'''
 
     is_subscribed = serializers.BooleanField(default=False)
@@ -33,7 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
         unique = ('username', 'email')
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(djoser.serializers.UserCreateSerializer):
     '''User model serializer for POST method.'''
 
     class Meta(UserSerializer.Meta):
@@ -73,6 +73,7 @@ class IngredientAddSerializer(IngredientSerializer):
 
 class AmountSerializer(serializers.ModelSerializer):
     '''Amount (of ingredients in a recipe) model serializer.'''
+
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
@@ -114,13 +115,6 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all()
     )
     image = Base64ToImage()
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id', 'name', 'text', 'cooking_time',
-            'ingredients', 'tags', 'image'
-        )
 
     def validate(self, data):
         blank_fields = []
@@ -192,6 +186,13 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         results['ingredients'] = IngredientAddSerializer(
             obj.amount.all(), many=True).data
         return results
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'name', 'text', 'cooking_time',
+            'ingredients', 'tags', 'image'
+        )
 
 
 class RecipeMinifiedSerializer(RecipeGetSerializer):
@@ -270,18 +271,6 @@ class SubscriptionsListSerializer(UserSerializer):
 class SubscribeSerializer(serializers.ModelSerializer):
     '''Subscribe model serializer.'''
 
-    class Meta:
-        model = Subscribe
-        fields = ('id', 'user', 'subscription')
-
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Subscribe.objects.all(),
-                fields=('user', 'subscription'),
-                message='Вы уже подписаны'
-            )
-        ]
-
     def validate(self, data):
         if data['user'] == data['subscription']:
             raise serializers.ValidationError(
@@ -306,3 +295,15 @@ class SubscribeSerializer(serializers.ModelSerializer):
             'is_subscribed': True,
             'recipes_count': recipes_count
         }
+
+    class Meta:
+        model = Subscribe
+        fields = ('id', 'user', 'subscription')
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Subscribe.objects.all(),
+                fields=('user', 'subscription'),
+                message='Вы уже подписаны'
+            )
+        ]
