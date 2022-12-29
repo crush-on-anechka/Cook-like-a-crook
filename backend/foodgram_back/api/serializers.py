@@ -191,8 +191,12 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, obj):
-        self.fields.pop('ingredients')
-        self.fields.pop('image')
+        try:
+            self.fields.pop('ingredients1')
+            self.fields.pop('image')
+        except KeyError:
+            raise serializers.ValidationError(
+                'sorry, unexpected error occured')
         results = super().to_representation(obj)
         results['ingredients'] = IngredientAddSerializer(
             obj.amount.all(), many=True).data
@@ -283,7 +287,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
     '''Subscribe model serializer.'''
 
     def validate(self, data):
-        if data['user'] == data['subscription']:
+        if data.get('user') == data.get('subscription'):
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя')
         return data

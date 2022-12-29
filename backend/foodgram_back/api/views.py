@@ -20,6 +20,7 @@ from .serializers import (FavoriteSerializer, IngredientSerializer,
                           ShoppingCartSerializer, SubscribeSerializer,
                           SubscriptionsListSerializer, TagSerializer)
 from .utils import perform_action
+import functools
 
 User = get_user_model()
 
@@ -44,8 +45,9 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=False,
             methods=['GET'],
             permission_classes=(permissions.IsAuthenticated,),
+            url_path='subscriptions'
             )
-    def subscriptions(self, request):
+    def _CustomUserViewSet__subscriptions(self, request):
 
         subscriptions = User.objects.filter(
             subscription__user=request.user).annotate(
@@ -67,8 +69,9 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=True,
             methods=['POST', 'DELETE'],
             permission_classes=(permissions.IsAuthenticated,),
+            url_path='subscribe'
             )
-    def subscribe(self, request, **kwargs):
+    def _CustomUserViewSet__subscribe(self, request, **kwargs):
         recipes_limit = request.query_params.get('recipes_limit')
         ctx = {'recipes_limit': int(recipes_limit)} if recipes_limit else {}
 
@@ -116,8 +119,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True,
             methods=['POST', 'DELETE'],
             permission_classes=(permissions.IsAuthenticated,),
+            url_path='shopping_cart'
             )
-    def shopping_cart(self, request, **kwargs):
+    def __shopping_cart__(self, request, **kwargs):
         kwargs.update({
             'serializer': ShoppingCartSerializer,
             'model': ShoppingCart,
@@ -127,8 +131,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True,
             methods=['POST', 'DELETE'],
             permission_classes=(permissions.IsAuthenticated,),
+            url_path='favorite'
             )
-    def favorite(self, request, **kwargs):
+    def _RecipeViewSet__favorite(self, request, **kwargs):
         kwargs.update({
             'serializer': FavoriteSerializer,
             'model': Favorite,
@@ -138,8 +143,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=False,
             methods=['GET'],
             permission_classes=(permissions.IsAuthenticated,),
+            url_path='download_shopping_cart'
             )
-    def download_shopping_cart(self, request, **kwargs):
+    def _RecipeViewSet__download_shopping_cart(self, request, **kwargs):
 
         SHOPPING_LIST = {}
 
