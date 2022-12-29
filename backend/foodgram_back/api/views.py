@@ -30,13 +30,12 @@ class CustomUserViewSet(UserViewSet):
     permission_classes = (permissions.AllowAny,)
 
     def get_queryset(self):
+        user = self.request.user
 
-        if self.request.user.is_authenticated:
+        if user.is_authenticated:
+            subscription = OuterRef('id')
+            subscribed = user.subscriber.filter(subscription=subscription)
 
-            subscribed = Subscribe.objects.filter(
-                user=self.request.user,
-                subscription=OuterRef('id')
-            )
             return User.objects.annotate(
                 is_subscribed=Exists(subscribed))
 
@@ -47,6 +46,7 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             )
     def subscriptions(self, request):
+
         subscriptions = User.objects.filter(
             subscription__user=request.user).annotate(
                 recipes_count=Count('recipes'))
@@ -55,7 +55,7 @@ class CustomUserViewSet(UserViewSet):
         ctx = {'recipes_limit': int(recipes_limit)} if recipes_limit else {}
 
         page = self.paginate_queryset(subscriptions)
-        if page is not None:
+        if page:
             serializer = SubscriptionsListSerializer(
                 page, many=True, context=ctx)
             return self.get_paginated_response(serializer.data)
@@ -97,17 +97,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def get_queryset(self):
+        user = self.request.user
 
-        if self.request.user.is_authenticated:
+        if user.is_authenticated:
+            recipe = OuterRef('id')
+            favorite = user.favorite.filter(recipe=recipe)
+            shopping_cart = user.shopping_cart.filter(recipe=recipe)
 
-            favorite = Favorite.objects.filter(
-                user=self.request.user,
-                recipe=OuterRef('id')
-            )
-            shopping_cart = ShoppingCart.objects.filter(
-                user=self.request.user,
-                recipe=OuterRef('id')
-            )
             return Recipe.objects.annotate(
                 is_favorited=Exists(favorite)).annotate(
                     is_in_shopping_cart=Exists(shopping_cart))

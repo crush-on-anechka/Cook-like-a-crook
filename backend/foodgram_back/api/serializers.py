@@ -2,6 +2,7 @@ import base64
 
 import djoser
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from recipes.models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
                             Tag)
 from rest_framework import serializers
@@ -30,7 +31,7 @@ class UserSerializer(djoser.serializers.UserSerializer):
         model = User
         fields = ('id', 'username', 'email', 'first_name',
                   'last_name', 'is_subscribed')
-        unique = ('username', 'email')
+        unique = ('username',)
 
 
 class UserCreateSerializer(djoser.serializers.UserCreateSerializer):
@@ -128,9 +129,14 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             )
         return data
 
+    @transaction.atomic
     def create(self, validated_data):
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
+        try:
+            ingredients = validated_data.pop('ingredients')
+            tags = validated_data.pop('tags')
+        except KeyError:
+            raise serializers.ValidationError(
+                'sorry, unexpected error occured')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
 
@@ -142,9 +148,14 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             )
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
+        try:
+            ingredients = validated_data.pop('ingredients')
+            tags = validated_data.pop('tags')
+        except KeyError:
+            raise serializers.ValidationError(
+                'sorry, unexpected error occured')
 
         instance.name = validated_data.get('name')
         instance.text = validated_data.get('text')
