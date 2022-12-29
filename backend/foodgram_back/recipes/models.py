@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 
 User = get_user_model()
@@ -62,7 +62,7 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(Tag, verbose_name='Тэги')
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления в минутах',
-        validators=(MinValueValidator(1), MaxValueValidator(1440))
+        validators=(MinValueValidator(1),)
     )
     image = models.ImageField(
         'Картинка, закодированная в Base64',
