@@ -295,10 +295,9 @@ class SubscribeSerializer(serializers.ModelSerializer):
     def to_representation(self, obj):
         recipes_limit = self.context.get('recipes_limit')
         user = obj.subscription
-        all_recipes = user.recipes.all()
-        recipes_count = all_recipes.count()
+        user_recipes = user.recipes.all()
         recipes_to_repr = RecipeMinifiedSerializer(
-            all_recipes[:recipes_limit], many=True).data
+            user_recipes[:recipes_limit], many=True).data
 
         return {
             'id': user.id,
@@ -308,7 +307,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             'last_name': user.last_name,
             'recipes': recipes_to_repr,
             'is_subscribed': True,
-            'recipes_count': recipes_count
+            'recipes_count': user_recipes.count()
         }
 
     class Meta:

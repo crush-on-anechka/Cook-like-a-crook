@@ -20,7 +20,6 @@ from .serializers import (FavoriteSerializer, IngredientSerializer,
                           ShoppingCartSerializer, SubscribeSerializer,
                           SubscriptionsListSerializer, TagSerializer)
 from .utils import perform_action
-import functools
 
 User = get_user_model()
 
@@ -121,7 +120,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             url_path='shopping_cart'
             )
-    def __shopping_cart__(self, request, **kwargs):
+    def _RecipeViewSet__shopping_cart(self, request, **kwargs):
         kwargs.update({
             'serializer': ShoppingCartSerializer,
             'model': ShoppingCart,
