@@ -17,7 +17,7 @@ def perform_action(self, request, query_param, **kwargs):
     if request.method == 'POST':
         serializer = kwargs.get('serializer')(
             data=data,
-            context=kwargs.get('ctx')
+            context=kwargs.get('context')
         )
         if serializer.is_valid():
             serializer.save()

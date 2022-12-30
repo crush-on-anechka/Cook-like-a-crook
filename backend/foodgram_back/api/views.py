@@ -71,13 +71,15 @@ class CustomUserViewSet(UserViewSet):
             url_path='subscribe'
             )
     def _CustomUserViewSet__subscribe(self, request, **kwargs):
+        context = {'request': request}
         recipes_limit = request.query_params.get('recipes_limit')
-        ctx = {'recipes_limit': int(recipes_limit)} if recipes_limit else {}
+        if recipes_limit:
+            context['recipes_limit'] = int(recipes_limit)
 
         kwargs.update({
             'serializer': SubscribeSerializer,
             'model': Subscribe,
-            'ctx': ctx
+            'context': context
         })
         return perform_action(self, request, 'subscription', **kwargs)
 

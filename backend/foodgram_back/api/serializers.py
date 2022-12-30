@@ -287,7 +287,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
     '''Subscribe model serializer.'''
 
     def validate(self, data):
-        if data.get('user') == data.get('subscription'):
+        if self.context.get('request').user == data.get('subscription'):
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя')
         return data
