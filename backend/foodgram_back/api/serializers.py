@@ -31,7 +31,13 @@ class UserSerializer(djoser.serializers.UserSerializer):
         model = User
         fields = ('id', 'username', 'email', 'first_name',
                   'last_name', 'is_subscribed')
-        unique = ('username',)
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=('username', 'email'),
+                message='Пользователь с таким именем и email уже существует'
+            ),
+        ]
 
 
 class UserCreateSerializer(djoser.serializers.UserCreateSerializer):
