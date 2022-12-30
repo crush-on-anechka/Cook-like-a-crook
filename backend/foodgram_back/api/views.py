@@ -148,19 +148,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
     def _RecipeViewSet__download_shopping_cart(self, request, **kwargs):
 
-        SHOPPING_LIST = {}
+        SUMMED_UP_AMOUNTS = {}
+        INGR_DATA = []
 
-        recipes = request.user.recipes.all()
+        recipes = Recipe.objects.filter(shopping_cart__user=request.user)
+
         for recipe in recipes:
             ingredients = recipe.ingredients.all()
             for ingredient in ingredients:
-                if ingredient.name not in SHOPPING_LIST:
-                    SHOPPING_LIST[ingredient.name] = 0
-                ingredient_in_recipe = Amount.objects.get(
-                    recipe=recipe, ingredient=ingredient)
-                intermediate_amount = SHOPPING_LIST.get(ingredient.name)
-                SHOPPING_LIST[ingredient.name] = (
-                    intermediate_amount + ingredient_in_recipe.amount)
+                if ingredient.name not in SUMMED_UP_AMOUNTS:
+                    SUMMED_UP_AMOUNTS[ingredient.name] = 0
+                ingred_in_recipe = get_object_or_404(
+                    Amount, recipe=recipe, ingredient=ingredient).amount
+                INGR_DATA.append((ingredient, recipe.name, ingred_in_recipe))
+                SUMMED_UP_AMOUNTS[ingredient.name] = (
+                    SUMMED_UP_AMOUNTS.get(ingredient.name) + ingred_in_recipe)
 
         response = HttpResponse(
             content_type='text/csv',
@@ -172,9 +174,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         writer = csv.writer(response)
         writer.writerow(['Список покупок:'])
-        for name, amount in SHOPPING_LIST.items():
-            unit = get_object_or_404(Ingredient, name=name).measurement_unit
-            writer.writerow([f'{name} ({unit}) — {amount}'])
+
+        for name, amount in SUMMED_UP_AMOUNTS.items():
+            ingredient = get_object_or_404(Ingredient, name=name)
+            writer.writerow(
+                [f'{name} — {amount} {ingredient.measurement_unit}:'])
+
+            for item in INGR_DATA:
+                if item[0] == ingredient:
+                    writer.writerow([f'    {item[1]} — {item[2]}'])
 
         return response
 
