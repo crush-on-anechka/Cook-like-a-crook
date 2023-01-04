@@ -12,7 +12,7 @@ def validate_name(value):
 
 
 def validate_color(value):
-    reg = re.compile('^#([a-f0-9]{3}){1,2}\b$')
+    reg = re.compile('^#([a-f0-9]{6})$')
     if not reg.match(value):
         raise ValidationError(
             'Enter a valid HEX code starting with # and consisting of '

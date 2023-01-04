@@ -1,8 +1,7 @@
-import base64
-
 import djoser
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
                             Tag)
 from rest_framework import serializers
@@ -12,20 +11,10 @@ from users.models import Subscribe
 User = get_user_model()
 
 
-class Base64ToImage(serializers.Field):
-    '''Custom field for decoding Base64 data to an image.'''
-
-    def to_representation(self, value):
-        return value
-
-    def to_internal_value(self, data):
-        return base64.decodebytes(data)
-
-
 class UserSerializer(djoser.serializers.UserSerializer):
     '''Basic user model serializer.'''
 
-    is_subscribed = serializers.BooleanField(default=False)
+    is_subscribed = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
@@ -33,7 +22,7 @@ class UserSerializer(djoser.serializers.UserSerializer):
                   'last_name', 'is_subscribed')
         validators = [
             UniqueTogetherValidator(
-                queryset=ShoppingCart.objects.all(),
+                queryset=User.objects.all(),
                 fields=('username', 'email'),
                 message='Пользователь с таким именем и email уже существует'
             ),
@@ -65,7 +54,21 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
 
 
-class IngredientAddSerializer(IngredientSerializer):
+class AmountSerializer(serializers.ModelSerializer):
+    '''Amount (of ingredients in a recipe) model serializer.'''
+
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
+
+    class Meta:
+        model = Amount
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+
+
+class IngredientCreateSerializer(serializers.ModelSerializer):
     '''Ingredient model serializer to be nested in creating recipe.'''
 
     id = serializers.PrimaryKeyRelatedField(
@@ -76,19 +79,6 @@ class IngredientAddSerializer(IngredientSerializer):
     class Meta:
         model = Amount
         fields = ('id', 'amount')
-
-
-class AmountSerializer(serializers.ModelSerializer):
-    '''Amount (of ingredients in a recipe) model serializer.'''
-
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit'
-    )
-
-    class Meta:
-        model = Amount
-        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
@@ -116,12 +106,12 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     '''Recipe model serializer for POST/PATCH methods.'''
 
-    ingredients = IngredientAddSerializer(many=True)
+    ingredients = IngredientCreateSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
     )
-    image = Base64ToImage()
+    image = Base64ImageField()
 
     def validate(self, data):
         blank_fields = []
@@ -140,9 +130,9 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         try:
             ingredients = validated_data.pop('ingredients')
             tags = validated_data.pop('tags')
-        except KeyError:
+        except KeyError as err:
             raise serializers.ValidationError(
-                'sorry, unexpected error occured')
+                f'sorry, unexpected error occured (KeyError: {err})')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
 
@@ -159,52 +149,34 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         try:
             ingredients = validated_data.pop('ingredients')
             tags = validated_data.pop('tags')
-        except KeyError:
+        except KeyError as err:
             raise serializers.ValidationError(
-                'sorry, unexpected error occured')
-
-        instance.name = validated_data.get('name')
-        instance.text = validated_data.get('text')
-        instance.image = validated_data.get('image')
-        instance.cooking_time = validated_data.get('cooking_time')
+                f'sorry, unexpected error occured (KeyError: {err})')
 
         instance.tags.set(tags)
 
-        amounts_before = instance.amount.all()
-        amounts_after = []
+        _ = [item.delete() for item in instance.amount.all()]
 
         for ingredient in ingredients:
-            try:
-                amount = Amount.objects.get(
-                    recipe=instance,
-                    ingredient=ingredient.get('ingredient')
+            Amount.objects.create(
+                recipe=instance,
+                ingredient=ingredient.get('ingredient'),
+                amount=ingredient.get('amount')
                 )
-                amount.amount = ingredient.get('amount')
-                amount.save()
-            except Amount.DoesNotExist:
-                amount = Amount.objects.create(
-                    recipe=instance,
-                    ingredient=ingredient.get('ingredient'),
-                    amount=ingredient.get('amount')
-                )
-            amounts_after.append(amount)
-
-        for amount in amounts_before:
-            if amount not in amounts_after:
-                amount.delete()
 
         instance.save()
-        return instance
+        results = super().update(instance, validated_data)
+        return results
 
     def to_representation(self, obj):
         try:
-            self.fields.pop('ingredients1')
-            self.fields.pop('image')
-        except KeyError:
+            self.fields.pop('ingredients')
+            # self.fields.pop('image') # надо сделать чтобы конвертировалось в бейс64 строку
+        except KeyError as err:
             raise serializers.ValidationError(
-                'sorry, unexpected error occured')
+                f'sorry, unexpected error occured (KeyError: {err})')
         results = super().to_representation(obj)
-        results['ingredients'] = IngredientAddSerializer(
+        results['ingredients'] = IngredientCreateSerializer(
             obj.amount.all(), many=True).data
         return results
 

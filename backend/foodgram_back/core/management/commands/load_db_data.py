@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         path = os.path.join(
-            settings.BASE_DIR.parent.parent, 'data', 'ingredients.csv'
+            settings.BASE_DIR, 'data', 'ingredients.csv'
         )
         with open(path, encoding='utf-8', newline='') as csvfile:
             for row in csv.reader(csvfile):
@@ -23,7 +23,7 @@ class Command(BaseCommand):
                     pass
 
         TAGS = [
-            ('breakfast', 'br', '#ffe4e1'),
+            ('breakfast', 'br', '#eb5284'),
             ('lunch', 'ln', '#008080'),
             ('dinner', 'dn', '#386087')
         ]
