@@ -144,6 +144,8 @@ REST_FRAMEWORK = {
         'api.utils.CustomPageNumberPagination',
 
     'PAGE_SIZE': 6,
+
+    'SEARCH_PARAM': 'name',
 }
 
 DJOSER = {

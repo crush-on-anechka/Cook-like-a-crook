@@ -14,7 +14,12 @@ User = get_user_model()
 class UserSerializer(djoser.serializers.UserSerializer):
     '''Basic user model serializer.'''
 
-    is_subscribed = serializers.BooleanField(read_only=True)
+    is_subscribed = serializers.SerializerMethodField()
+
+    def get_is_subscribed(self, obj):
+        request_user = self.context.get('request').user
+        subscription = request_user.subscriber.filter(subscription=obj)
+        return bool(subscription)
 
     class Meta:
         model = User
@@ -148,12 +153,9 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         try:
             ingredients = validated_data.pop('ingredients')
-            tags = validated_data.pop('tags')
         except KeyError as err:
             raise serializers.ValidationError(
                 f'sorry, unexpected error occured (KeyError: {err})')
-
-        instance.tags.set(tags)
 
         _ = [item.delete() for item in instance.amount.all()]
 
@@ -165,13 +167,11 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 )
 
         instance.save()
-        results = super().update(instance, validated_data)
-        return results
+        return super().update(instance, validated_data)
 
     def to_representation(self, obj):
         try:
             self.fields.pop('ingredients')
-            # self.fields.pop('image') # надо сделать чтобы конвертировалось в бейс64 строку
         except KeyError as err:
             raise serializers.ValidationError(
                 f'sorry, unexpected error occured (KeyError: {err})')
@@ -277,6 +277,10 @@ class SubscribeSerializer(serializers.ModelSerializer):
         recipes_to_repr = RecipeMinifiedSerializer(
             user_recipes[:recipes_limit], many=True).data
 
+        request_user = self.context.get('request').user
+        subscription = request_user.subscriber.filter(subscription=user)
+        is_subscribed = bool(subscription)
+
         return {
             'id': user.id,
             'username': user.username,
@@ -284,7 +288,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             'first_name': user.first_name,
             'last_name': user.last_name,
             'recipes': recipes_to_repr,
-            'is_subscribed': True,
+            'is_subscribed': is_subscribed,
             'recipes_count': user_recipes.count()
         }
 

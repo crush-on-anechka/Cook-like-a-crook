@@ -9,6 +9,9 @@ class User(AbstractUser):
     last_name = models.CharField('Фамилия', max_length=150)
     email = models.EmailField('Адрес электронной почты', max_length=254)
 
+    class Meta(AbstractUser.Meta):
+        ordering = ('username',)
+
 
 class Subscribe(models.Model):
     '''Users subscriptions on other users model class.'''

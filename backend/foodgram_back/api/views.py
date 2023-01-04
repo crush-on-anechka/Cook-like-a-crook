@@ -8,7 +8,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
                             Tag)
-from rest_framework import filters, permissions, viewsets
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import Subscribe
@@ -27,19 +27,8 @@ User = get_user_model()
 class CustomUserViewSet(UserViewSet):
     '''User model view set.'''
 
+    queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
-
-    def get_queryset(self):
-        user = self.request.user
-
-        if user.is_authenticated:
-            subscription = OuterRef('id')
-            subscribed = user.subscriber.filter(subscription=subscription)
-
-            return User.objects.annotate(
-                is_subscribed=Exists(subscribed))
-
-        return User.objects.all()
 
     @action(detail=False,
             methods=['GET'],
@@ -51,6 +40,8 @@ class CustomUserViewSet(UserViewSet):
         subscriptions = User.objects.filter(
             subscription__user=request.user).annotate(
                 recipes_count=Count('recipes'))
+        if not subscriptions:
+            return Response(status=status.HTTP_200_OK)
 
         recipes_limit = request.query_params.get('recipes_limit')
         ctx = {'recipes_limit': int(recipes_limit)} if recipes_limit else {}
