@@ -7,11 +7,10 @@ services:
     volumes:
       - db_volume:/var/lib/postgresql/data/
     env_file:
-      - ../backend/.env
+      - ./.env
 
   backend:
-    # image: crush04anechka/yamdb_final:latest
-    build: ../backend
+    image: crush04anechka/foodgram_back:v1
     container_name: backend
     restart: always
     volumes:
@@ -20,12 +19,10 @@ services:
     depends_on:
       - foodgram_db
     env_file:
-      - ../backend/.env
+      - ./.env
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: crush04anechka/foodgram_front:v1
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
