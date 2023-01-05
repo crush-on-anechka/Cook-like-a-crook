@@ -1,5 +1,6 @@
 import djoser
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
@@ -7,7 +8,6 @@ from recipes.models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from users.models import Subscribe
-from django.contrib.auth.models import AnonymousUser
 
 User = get_user_model()
 
