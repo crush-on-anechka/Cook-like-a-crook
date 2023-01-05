@@ -7,6 +7,7 @@ from recipes.models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from users.models import Subscribe
+from django.contrib.auth.models import AnonymousUser
 
 User = get_user_model()
 
@@ -18,6 +19,8 @@ class UserSerializer(djoser.serializers.UserSerializer):
 
     def get_is_subscribed(self, obj):
         request_user = self.context.get('request').user
+        if type(request_user) == AnonymousUser:
+            return False
         subscription = request_user.subscriber.filter(subscription=obj)
         return bool(subscription)
 
