@@ -15,6 +15,6 @@ def validate_color(value):
     reg = re.compile('^#([a-f0-9]{6})$')
     if not reg.match(value):
         raise ValidationError(
-            'Enter a valid HEX code starting with # and consisting of '
-            'either 3 or 6 symbols which are letters a-f or numbers.'
+            'Enter a valid HEX code starting with # and consisting '
+            'of 6 symbols which are letters a-f or numbers.'
         )
