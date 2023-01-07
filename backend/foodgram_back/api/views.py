@@ -35,7 +35,7 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             url_path='subscriptions'
             )
-    def _CustomUserViewSet__subscriptions(self, request):
+    def _subscriptions(self, request):
 
         subscriptions = User.objects.filter(
             subscription__user=request.user).annotate(
@@ -61,7 +61,7 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             url_path='subscribe'
             )
-    def _CustomUserViewSet__subscribe(self, request, **kwargs):
+    def _subscribe(self, request, **kwargs):
         context = {'request': request}
         recipes_limit = request.query_params.get('recipes_limit')
         if recipes_limit:
@@ -113,7 +113,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             url_path='shopping_cart'
             )
-    def _RecipeViewSet__shopping_cart(self, request, **kwargs):
+    def _shopping_cart(self, request, **kwargs):
         kwargs.update({
             'serializer': ShoppingCartSerializer,
             'model': ShoppingCart,
@@ -125,7 +125,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             url_path='favorite'
             )
-    def _RecipeViewSet__favorite(self, request, **kwargs):
+    def _favorite(self, request, **kwargs):
         kwargs.update({
             'serializer': FavoriteSerializer,
             'model': Favorite,
@@ -137,7 +137,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,),
             url_path='download_shopping_cart'
             )
-    def _RecipeViewSet__download_shopping_cart(self, request, **kwargs):
+    def _download_shopping_cart(self, request, **kwargs):
 
         SUMMED_UP_AMOUNTS = {}
         INGR_DATA = []
