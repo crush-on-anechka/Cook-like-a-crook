@@ -1,8 +1,10 @@
+import base64
+
 import djoser
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
+from django.core.files.base import ContentFile
 from django.db import transaction
-from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
                             Tag)
 from rest_framework import serializers
@@ -10,6 +12,15 @@ from rest_framework.validators import UniqueTogetherValidator
 from users.models import Subscribe
 
 User = get_user_model()
+
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+        return super().to_internal_value(data)
 
 
 class UserSerializer(djoser.serializers.UserSerializer):
@@ -119,7 +130,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Tag.objects.all()
     )
-    image = Base64ImageField()
+    image = Base64ImageField(required=False)
 
     def validate(self, data):
         blank_fields = []
@@ -127,6 +138,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             if field not in data:
                 blank_fields.append(field)
         blank_fields.remove('id')
+        blank_fields.remove('image')
         if len(blank_fields) > 0:
             raise serializers.ValidationError(
                 f'{", ".join(str(x) for x in blank_fields)} may not be blank.'
@@ -169,7 +181,6 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 amount=ingredient.get('amount')
                 )
 
-        instance.save()
         return super().update(instance, validated_data)
 
     def to_representation(self, obj):
