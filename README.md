@@ -156,5 +156,5 @@ DB_PORT=your_db_port
 ```
 
 ### Разработчики  
-[Саша Смирнов](https://github.com/crush-on-anechka) - бэкенд, инфраструктура для деплоя проекта в Docker контейнерах.
+[Саша Смирнов](https://github.com/crush-on-anechka) - бэкенд, инфраструктура для деплоя проекта в Docker контейнерах.  
 [Неизвестный Герой](https://github.com/yandex-praktikum) - фронтэнд.
