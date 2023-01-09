@@ -138,10 +138,13 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             if field not in data:
                 blank_fields.append(field)
         blank_fields.remove('id')
-        blank_fields.remove('image')
-        if len(blank_fields) > 0:
+        if (self.context['request'].method == 'PATCH'
+           and 'image' in blank_fields):
+            blank_fields.remove('image')
+        if len(blank_fields):
             raise serializers.ValidationError(
-                f'{", ".join(str(x) for x in blank_fields)} may not be blank.'
+                f'{", ".join(str(x) for x in blank_fields)} '
+                f'may not be blank.'
             )
         return data
 

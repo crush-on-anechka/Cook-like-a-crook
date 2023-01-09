@@ -168,12 +168,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         for name, amount in SUMMED_UP_AMOUNTS.items():
             ingredient = get_object_or_404(Ingredient, name=name)
+            unit = ingredient.measurement_unit
             writer.writerow(
-                [f'{name} — {amount} {ingredient.measurement_unit}:'])
+                [f'{name} — {amount} {unit}:'])
 
             for item in INGR_DATA:
                 if item[0] == ingredient:
-                    writer.writerow([f'    {item[1]} — {item[2]}'])
+                    writer.writerow([f'    {item[1]} — {item[2]} {unit}'])
 
         return response
 

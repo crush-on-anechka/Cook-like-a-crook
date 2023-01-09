@@ -6,7 +6,7 @@
 * Python 3.10
 * Django 4.1.4
 * Django REST framework 3.14
-* Git
+* React 17.0.1
 * PostgreSQL
 * Docker
 
@@ -154,3 +154,7 @@ DB_PORT=your_db_port
   ]
 }
 ```
+
+### Разработчики  
+[Саша Смирнов](https://github.com/crush-on-anechka) - бэкенд, инфраструктура для деплоя проекта в Docker контейнерах.
+[Неизвестный Герой](https://github.com/yandex-praktikum) - фронтэнд.
